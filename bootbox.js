@@ -363,7 +363,7 @@
     return exports.dialog(options);
   };
 
-  exports.prompt = function() {
+  exports.form = function() {
     var options;
     var defaults;
     var dialog;
@@ -371,6 +371,7 @@
     var input;
     var shouldShow;
     var inputOptions;
+    var inputs = [];
 
     // we have to create our form first otherwise
     // its value is undefined when gearing up our options
@@ -386,8 +387,10 @@
     defaults = {
       className: "bootbox-prompt",
       buttons: createLabels("cancel", "confirm"),
-      value: "",
-      inputType: "text"
+      inputs: [{
+        value: "",
+        inputType: "text"
+      }]
     };
 
     options = validateButtons(
@@ -410,142 +413,152 @@
     };
 
     options.buttons.confirm.callback = function() {
+      var values = [];
       var value;
 
-      if (options.inputType === "checkbox") {
-        value = input.find("input:checked").map(function() {
-          return $(this).val();
-        }).get();
-      } else {
-        value = input.val();
+      for (var i = 0; i < options.inputs.length; i++) {
+        var current_options = options.inputs[i];
+        if (current_options.inputType === "checkbox") {
+          value = inputs[i].find("input:checked").map(function() {
+            return $(this).val();
+          }).get();
+        } else {
+          value = inputs[i].val();
+        }
+        values.push(value);
       }
 
+      value = (values.length === 1)? values[0] : values;
       return options.callback.call(this, value);
     };
 
     options.show = false;
 
-    // prompt specific validation
+    // form specific validation
     if (!options.title) {
-      throw new Error("prompt requires a title");
+      throw new Error("form requires a title");
     }
 
     if (!$.isFunction(options.callback)) {
-      throw new Error("prompt requires a callback");
+      throw new Error("form requires a callback");
     }
 
-    if (!templates.inputs[options.inputType]) {
-      throw new Error("invalid prompt type");
-    }
+    for (var i = 0; i < options.inputs.length; i++) {
+      var current_options = options.inputs[i];
+      if (!templates.inputs[current_options.inputType]) {
+        throw new Error("invalid prompt type");
+      }
 
-    // create the input based on the supplied type
-    input = $(templates.inputs[options.inputType]);
+      // create the input based on the supplied type
+      input = $(templates.inputs[current_options.inputType]);
 
-    switch (options.inputType) {
-      case "text":
-      case "textarea":
-      case "email":
-      case "date":
-      case "time":
-      case "number":
-      case "password":
-        input.val(options.value);
-        break;
+      switch (current_options.inputType) {
+        case "text":
+        case "textarea":
+        case "email":
+        case "date":
+        case "time":
+        case "number":
+        case "password":
+          input.val(current_options.value);
+          break;
 
-      case "select":
-        var groups = {};
-        inputOptions = options.inputOptions || [];
+        case "select":
+          var groups = {};
+          inputOptions = current_options.inputOptions || [];
 
-        if (!$.isArray(inputOptions)) {
-          throw new Error("Please pass an array of input options");
-        }
+          if (!$.isArray(inputOptions)) {
+            throw new Error("Please pass an array of input options");
+          }
 
-        if (!inputOptions.length) {
-          throw new Error("prompt with select requires options");
-        }
+          if (!inputOptions.length) {
+            throw new Error("prompt with select requires options");
+          }
 
-        each(inputOptions, function(_, option) {
+          each(inputOptions, function(_, option) {
 
-          // assume the element to attach to is the input...
-          var elem = input;
+            // assume the element to attach to is the input...
+            var elem = input;
 
-          if (option.value === undefined || option.text === undefined) {
+            if (option.value === undefined || option.text === undefined) {
+              throw new Error("each option needs a `value` and a `text` property");
+            }
+
+            // ... but override that element if this option sits in a group
+
+            if (option.group) {
+              // initialise group if necessary
+              if (!groups[option.group]) {
+                groups[option.group] = $("<optgroup/>").attr("label", option.group);
+              }
+
+              elem = groups[option.group];
+            }
+
+            elem.append("<option value='" + option.value + "'>" + option.text + "</option>");
+          });
+
+          each(groups, function(_, group) {
+            input.append(group);
+          });
+
+          // safe to set a select's value as per a normal input
+          input.val(current_options.value);
+          break;
+
+        case "checkbox":
+          var values   = $.isArray(current_options.value) ? current_options.value : [current_options.value];
+          inputOptions = current_options.inputOptions || [];
+
+          if (!inputOptions.length) {
+            throw new Error("prompt with checkbox requires options");
+          }
+
+          if (!inputOptions[0].value || !inputOptions[0].text) {
             throw new Error("each option needs a `value` and a `text` property");
           }
 
-          // ... but override that element if this option sits in a group
+          // checkboxes have to nest within a containing element, so
+          // they break the rules a bit and we end up re-assigning
+          // our 'input' element to this container instead
+          input = $("<div/>");
 
-          if (option.group) {
-            // initialise group if necessary
-            if (!groups[option.group]) {
-              groups[option.group] = $("<optgroup/>").attr("label", option.group);
-            }
+          each(inputOptions, function(_, option) {
+            var checkbox = $(templates.inputs[current_options.inputType]);
 
-            elem = groups[option.group];
-          }
+            checkbox.find("input").attr("value", option.value);
+            checkbox.find("label").append(option.text);
 
-          elem.append("<option value='" + option.value + "'>" + option.text + "</option>");
-        });
+            // we've ensured values is an array so we can always iterate over it
+            each(values, function(_, value) {
+              if (value === option.value) {
+                checkbox.find("input").prop("checked", true);
+              }
+            });
 
-        each(groups, function(_, group) {
-          input.append(group);
-        });
-
-        // safe to set a select's value as per a normal input
-        input.val(options.value);
-        break;
-
-      case "checkbox":
-        var values   = $.isArray(options.value) ? options.value : [options.value];
-        inputOptions = options.inputOptions || [];
-
-        if (!inputOptions.length) {
-          throw new Error("prompt with checkbox requires options");
-        }
-
-        if (!inputOptions[0].value || !inputOptions[0].text) {
-          throw new Error("each option needs a `value` and a `text` property");
-        }
-
-        // checkboxes have to nest within a containing element, so
-        // they break the rules a bit and we end up re-assigning
-        // our 'input' element to this container instead
-        input = $("<div/>");
-
-        each(inputOptions, function(_, option) {
-          var checkbox = $(templates.inputs[options.inputType]);
-
-          checkbox.find("input").attr("value", option.value);
-          checkbox.find("label").append(option.text);
-
-          // we've ensured values is an array so we can always iterate over it
-          each(values, function(_, value) {
-            if (value === option.value) {
-              checkbox.find("input").prop("checked", true);
-            }
+            input.append(checkbox);
           });
+          break;
+      }
 
-          input.append(checkbox);
-        });
-        break;
+      // @TODO provide an attributes option instead
+      // and simply map that as keys: vals
+      if (current_options.placeholder) {
+        input.attr("placeholder", current_options.placeholder);
+      }
+
+      if (current_options.pattern) {
+        input.attr("pattern", current_options.pattern);
+      }
+
+      if (current_options.maxlength) {
+        input.attr("maxlength", current_options.maxlength);
+      }
+
+      // now place it in our form
+      form.append(input);
+      inputs.push(input);
     }
-
-    // @TODO provide an attributes option instead
-    // and simply map that as keys: vals
-    if (options.placeholder) {
-      input.attr("placeholder", options.placeholder);
-    }
-
-    if (options.pattern) {
-      input.attr("pattern", options.pattern);
-    }
-
-    if (options.maxlength) {
-      input.attr("maxlength", options.maxlength);
-    }
-
-    // now place it in our form
-    form.append(input);
 
     form.on("submit", function(e) {
       e.preventDefault();
@@ -558,15 +571,17 @@
 
     dialog = exports.dialog(options);
 
-    // clear the existing handler focusing the submit button...
-    dialog.off("shown.bs.modal");
+    if (inputs.length) {
+      // clear the existing handler focusing the submit button...
+      dialog.off("shown.bs.modal");
 
-    // ...and replace it with one focusing our input, if possible
-    dialog.on("shown.bs.modal", function() {
-      // need the closure here since input isn't
-      // an object otherwise
-      input.focus();
-    });
+      // ...and replace it with one focusing our input, if possible
+      dialog.on("shown.bs.modal", function() {
+        // need the closure here since input isn't
+        // an object otherwise
+        inputs[0].focus();
+      });
+    }
 
     if (shouldShow === true) {
       dialog.modal("show");
@@ -574,6 +589,41 @@
 
     return dialog;
   };
+
+  exports.prompt = function() {
+    var defaults = {
+      className: "bootbox-prompt",
+      buttons: createLabels("cancel", "confirm"),
+      value: "",
+      inputType: "text"
+    };
+
+    var options = validateButtons(
+      mergeArguments(defaults, arguments, ["title", "callback"]),
+      ["cancel", "confirm"]
+    );
+
+    // prompt specific validation
+    if (!options.title) {
+      throw new Error("prompt requires a title");
+    }
+
+    if (!$.isFunction(options.callback)) {
+      throw new Error("prompt requires a callback");
+    }
+
+    var input = {};
+    var inputFields = ['value', 'inputType', 'inputOptions', 'placeholder', 'pattern', 'maxlength'];
+    each(inputFields, function(_, x) {
+      input[x] = options[x];
+      delete options[x];
+    });
+    options.inputs = [input];
+
+    var dialog = exports.form(options);
+    return dialog;
+  };
+
 
   exports.dialog = function(options) {
     options = sanitize(options);
