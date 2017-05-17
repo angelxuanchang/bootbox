@@ -525,7 +525,7 @@ describe("bootbox.prompt", function() {
           return expect(this.exists("select")).to.be.ok;
         });
       });
-      return describe("with option groups", function() {
+      describe("with option groups", function() {
         beforeEach(function() {
           this.options.inputType = 'select';
           this.options.inputOptions = [
@@ -561,6 +561,52 @@ describe("bootbox.prompt", function() {
         });
         return it("with four options", function() {
           return expect(this.find("option").length).to.equal(4);
+        });
+      });
+      return describe("with optional input", function() {
+        beforeEach(function() {
+          this.options.inputType = 'select';
+          this.options.inputOptions = [
+            {
+              value: 1,
+              group: 'foo',
+              text: 'foo'
+            }, {
+              value: 2,
+              group: 'bar',
+              text: 'bar'
+            }, {
+              value: 3,
+              group: 'foo',
+              text: 'foobar'
+            }, {
+              value: 4,
+              group: 'bar',
+              text: 'barfoo'
+            }
+          ];
+          this.options.value = 4;
+          this.options.customInput = {
+            inputType: 'textarea',
+            value: 4
+          };
+          return this.create();
+        });
+        it("shows select input", function() {
+          return expect(this.exists("select")).to.be.ok;
+        });
+        it("has proper class", function() {
+          expect(this.find("select").hasClass("bootbox-input")).to.be.ok;
+          return expect(this.find("select").hasClass("bootbox-input-select")).to.be.ok;
+        });
+        it("with two option group", function() {
+          return expect(this.find("optgroup").length).to.equal(2);
+        });
+        it("with four options", function() {
+          return expect(this.find("option").length).to.equal(4);
+        });
+        return it("with custom input", function() {
+          return expect(this.exists("textarea")).to.be.ok;
         });
       });
     });

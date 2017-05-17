@@ -52,6 +52,8 @@
       "<button type='button' class='bootbox-close-button close' aria-hidden='true'>&times;</button>",
     form:
       "<form class='bootbox-form'></form>",
+    inputLabel:
+      "<label class='form-control-label'></label>",
     inputs: {
       text:
         "<input class='bootbox-input bootbox-input-text form-control' autocomplete=off type=text />",
@@ -422,6 +424,11 @@
           value = inputs[i].find("input:checked").map(function() {
             return $(this).val();
           }).get();
+        } else if (current_options.inputType === "select" && current_options.customInput) {
+          value = inputs[i].find("select").val();
+          if (value == current_options.customInput.value) {
+            value = current_options.customInput.input.val();
+          }
         } else {
           value = inputs[i].val();
         }
@@ -504,6 +511,41 @@
 
           // safe to set a select's value as per a normal input
           input.val(current_options.value);
+
+          if (current_options.customInput) {
+            // select with customValue
+            var s = current_options.customInput;
+            var select = input;
+            input = $("<div/>");
+            input.append(select);
+            input.append("<br/>");
+            var customInputType = s.inputType || 'textarea';
+            var customInput = $(templates.inputs[customInputType]);
+            input.append(customInput);
+
+            if (s.placeholder) {
+              customInput.attr("placeholder", s.placeholder);
+            }
+            if (s.maxlength) {
+              customInput.attr("maxlength", s.maxlength);
+            }
+            select.change(function(sel, customValue, customInput) {
+              return function() {
+                if (sel.val() == customValue) {
+                  customInput.show();
+                } else {
+                  customInput.hide();
+                }
+              }}(select, s.value, customInput)
+            );
+            if (current_options.value === s.value) {
+              customInput.show();
+            } else {
+              customInput.hide();
+            }
+            current_options.customInput.input = customInput;
+          }
+
           break;
 
         case "checkbox":
@@ -556,6 +598,14 @@
       }
 
       // now place it in our form
+      if (i > 0) {
+        form.append('<br/>');
+      }
+      if (options.inputs.length > 1 && current_options.title) {
+        var inputLabel = $(templates.inputLabel);
+        inputLabel.text(current_options.title);
+        form.append(inputLabel);
+      }
       form.append(input);
       inputs.push(input);
     }
@@ -613,7 +663,8 @@
     }
 
     var input = {};
-    var inputFields = ['value', 'inputType', 'inputOptions', 'placeholder', 'pattern', 'maxlength'];
+    var inputFields = ['value', 'inputType', 'inputOptions', 
+      'placeholder', 'pattern', 'maxlength', 'customInput'];
     each(inputFields, function(_, x) {
       input[x] = options[x];
       delete options[x];
