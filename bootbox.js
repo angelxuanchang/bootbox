@@ -431,6 +431,9 @@
           }
         } else {
           value = inputs[i].val();
+          if (current_options.inputType === "number") {
+            value = parseFloat(value);
+          }
         }
         values.push(value);
       }
