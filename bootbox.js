@@ -65,6 +65,8 @@
         "<select class='bootbox-input bootbox-input-select form-control'></select>",
       checkbox:
         "<div class='checkbox'><label><input class='bootbox-input bootbox-input-checkbox' type='checkbox' /></label></div>",
+      boolean:
+        "<input class='bootbox-input bootbox-input-checkbox' type='checkbox' />",
       date:
         "<input class='bootbox-input bootbox-input-date form-control' autocomplete=off type='date' />",
       time:
@@ -424,6 +426,8 @@
           value = inputs[i].find("input:checked").map(function() {
             return $(this).val();
           }).get();
+        } else if (current_options.inputType === "boolean") {
+          value = inputs[i].prop("checked");
         } else if (current_options.inputType === "select" && current_options.customInput) {
           value = inputs[i].find("select").val();
           if (value == current_options.customInput.value) {
@@ -471,6 +475,9 @@
         case "number":
         case "password":
           input.val(current_options.value);
+          break;
+        case "boolean":
+          input.prop("checked", current_options.value);
           break;
 
         case "select":
