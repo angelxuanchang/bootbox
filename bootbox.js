@@ -437,6 +437,8 @@
           value = inputs[i].val();
           if (current_options.inputType === "number") {
             value = parseFloat(value);
+          } else if (current_options.parse) {
+            value = current_options.parse(value);
           }
         }
         values.push(value);
