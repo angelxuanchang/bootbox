@@ -635,10 +635,14 @@
           // our 'input' element to this container instead
           input = $("<div/>");
 
-          each(inputOptions, function(_, option) {
+          var radioInputs = [];
+          each(inputOptions, function(_, option, optionIndex) {
             var radio = $(templates.inputs[current_options.inputType]);
 
             radio.find("input").attr("value", option.value).attr("name", current_options.name);
+            if (current_options.useNumberShortcuts) {
+              radio.find("label").append((optionIndex+1) + '.&nbsp;');
+            }
             radio.find("label").append(option.text);
 
             if (value === option.value) {
@@ -646,7 +650,21 @@
             }
 
             input.append(radio);
+            radioInputs.push(radio.find("input"));
           });
+          if (current_options.useNumberShortcuts) {
+            input.on('keypress', function(e) {
+              var keyCount = e.which - 48; // subtract ascii for "0" key number
+              if (keyCount >= 1 && keyCount <= inputOptions.length) {
+                var button = radioInputs[keyCount-1];
+                if (button) {
+                  button.focus();
+                  button.click();
+                  return false;
+                }
+              }
+            });
+          }
           break;
       }
 
@@ -696,7 +714,12 @@
       dialog.on("shown.bs.modal", function() {
         // need the closure here since input isn't
         // an object otherwise
-        inputs[0].focus();
+        var elements = inputs[0].find('input');
+        if (elements.length) {
+          elements[0].focus();
+        } else {
+          inputs[0].focus();
+        }
       });
     }
 
@@ -731,7 +754,8 @@
 
     var input = {};
     var inputFields = ['value', 'inputType', 'inputOptions', 
-      'placeholder', 'pattern', 'maxlength', 'customInput'];
+      'placeholder', 'pattern', 'maxlength', 'customInput',
+      'useNumberShortcuts'];
     each(inputFields, function(_, x) {
       input[x] = options[x];
       delete options[x];
@@ -910,8 +934,20 @@
       }
     });
 
+    if (!options.propagateKeys) {
+      dialog.on("keypress", function(e) {
+        e.stopPropagation();
+      });
+      dialog.on("keyup", function(e) {
+        e.stopPropagation();
+      });
+      dialog.on("keydown", function(e) {
+        e.stopPropagation();
+      });
+    }
+
     // the remainder of this method simply deals with adding our
-    // dialogent to the DOM, augmenting it with Bootstrap's modal
+    // dialog to the DOM, augmenting it with Bootstrap's modal
     // functionality and then giving the resulting object back
     // to our caller
 
