@@ -65,6 +65,8 @@
         "<select class='bootbox-input bootbox-input-select form-control'></select>",
       checkbox:
         "<div class='checkbox'><label><input class='bootbox-input bootbox-input-checkbox' type='checkbox' /></label></div>",
+      radio:
+        "<div class='radio'><label><input class='bootbox-input bootbox-input-radio' type='radio' /></label></div>",
       boolean:
         "<input class='bootbox-input bootbox-input-checkbox' type='checkbox' />",
       date:
@@ -143,6 +145,18 @@
     $.each(collection, function(key, value) {
       iterator(key, value, index++);
     });
+  }
+
+  // dec2hex :: Integer -> String
+  function dec2hex (dec) {
+    return ('0' + dec.toString(16)).substr(-2);
+  }
+
+  // generateId :: Integer -> String
+  function generateId (len) {
+    var arr = new Uint8Array((len || 40) / 2);
+    window.crypto.getRandomValues(arr);
+    return Array.from(arr, dec2hex).join('');
   }
 
   /**
@@ -428,6 +442,8 @@
           }).get();
         } else if (current_options.inputType === "boolean") {
           value = inputs[i].prop("checked");
+        } else if (current_options.inputType === "radio") {
+          value = inputs[i].find("input:checked").val();
         } else if (current_options.inputType === "select" && current_options.customInput) {
           value = inputs[i].find("select").val();
           if (value == current_options.customInput.value) {
@@ -459,6 +475,7 @@
       throw new Error("form requires a callback");
     }
 
+    var form_name = options.name || 'form_' + generateId(5);
     for (var i = 0; i < options.inputs.length; i++) {
       var current_options = options.inputs[i];
       if (!templates.inputs[current_options.inputType]) {
@@ -568,8 +585,10 @@
             throw new Error("prompt with checkbox requires options");
           }
 
-          if (!inputOptions[0].value || !inputOptions[0].text) {
-            throw new Error("each option needs a `value` and a `text` property");
+          for (var oi = 0; oi < inputOptions.length; oi++) {
+            if (inputOptions[oi].value == undefined || inputOptions[oi].text == undefined) {
+              throw new Error("each option needs a `value` and a `text` property");
+            }
           }
 
           // checkboxes have to nest within a containing element, so
@@ -591,6 +610,42 @@
             });
 
             input.append(checkbox);
+          });
+          break;
+
+        case "radio":
+          var value = current_options.value;
+          inputOptions = current_options.inputOptions || [];
+          if (current_options.name == undefined) {
+            current_options.name = form_name + '_input_' + i;
+          }
+
+          if (!inputOptions.length) {
+            throw new Error("prompt with radio requires options");
+          }
+
+          for (var oi = 0; oi < inputOptions.length; oi++) {
+            if (inputOptions[oi].value == undefined || inputOptions[oi].text == undefined) {
+              throw new Error("each option needs a `value` and a `text` property");
+            }
+          }
+
+          // radio buttons have to nest within a containing element, so
+          // they break the rules a bit and we end up re-assigning
+          // our 'input' element to this container instead
+          input = $("<div/>");
+
+          each(inputOptions, function(_, option) {
+            var radio = $(templates.inputs[current_options.inputType]);
+
+            radio.find("input").attr("value", option.value).attr("name", current_options.name);
+            radio.find("label").append(option.text);
+
+            if (value === option.value) {
+              radio.find("input").prop("checked", true);
+            }
+
+            input.append(radio);
           });
           break;
       }
