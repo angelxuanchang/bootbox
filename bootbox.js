@@ -687,12 +687,18 @@
       if (i > 0) {
         form.append('<br/>');
       }
+      if (current_options.messageBefore) {
+        form.append(current_options.messageBefore);
+      }
       if (!isPrompt && current_options.title) {
         var inputLabel = $(templates.inputLabel);
         inputLabel.text(current_options.title);
         form.append(inputLabel);
       }
       form.append(input);
+      if (current_options.messageAfter) {
+        form.append(current_options.messageAfter);
+      }
       inputs.push(input);
     }
 
@@ -757,7 +763,7 @@
     var input = {};
     var inputFields = ['value', 'inputType', 'inputOptions', 
       'placeholder', 'pattern', 'maxlength', 'customInput',
-      'useNumberShortcuts'];
+      'useNumberShortcuts', 'messageBefore', 'messageAfter'];
     each(inputFields, function(_, x) {
       input[x] = options[x];
       delete options[x];

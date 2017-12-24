@@ -30,8 +30,10 @@ The main enhancement is support for a form with multiple inputs.  This is a gene
 | `inputType` | `text` (default), `textarea`, `email`, `select`, `checkbox`, <b>`boolean`</b>, <b>`radio`</b>, `date`, `time`, `number`, `password` |
 | `inputOptions`  | Array of valid values need to be specified for `select`, `checkbox`, or `radio`. |
 | `customInput` | Specifications for a custom input field (`Other`) for `select` |
-| `useNumberShortcuts` | Uses number as shortcuts for `radio` options |
+| `useNumberShortcuts` | Uses number as shortcuts for `radio` options (default=`false`) |
 | `parse` | Custom object with `name` (`string`), `parse` (`function(string):T`), `toString` (`function(T):string`) that handles conversion between string and type `T` |
+| `messageBefore` | String with HTML to show before the input
+| `messageAfter` | String with HTML to show after the input
 
 ### Additional options
 
