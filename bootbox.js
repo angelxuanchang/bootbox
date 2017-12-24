@@ -430,6 +430,7 @@
       return options.callback.call(this, null);
     };
 
+    var isPrompt = (options.inputs.length === 1 && options.type === 'prompt');
     options.buttons.confirm.callback = function() {
       var values = [];
       var value;
@@ -460,7 +461,7 @@
         values.push(value);
       }
 
-      value = (values.length === 1)? values[0] : values;
+      value = isPrompt? values[0] : values;
       return options.callback.call(this, value);
     };
 
@@ -686,7 +687,7 @@
       if (i > 0) {
         form.append('<br/>');
       }
-      if (options.inputs.length > 1 && current_options.title) {
+      if (!isPrompt && current_options.title) {
         var inputLabel = $(templates.inputLabel);
         inputLabel.text(current_options.title);
         form.append(inputLabel);
@@ -735,7 +736,8 @@
       className: "bootbox-prompt",
       buttons: createLabels("cancel", "confirm"),
       value: "",
-      inputType: "text"
+      inputType: "text",
+      type: "prompt"
     };
 
     var options = validateButtons(
