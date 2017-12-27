@@ -495,9 +495,23 @@
         case "number":
         case "password":
           input.val(current_options.value);
+          if (current_options.onChange) {
+            input.change(function(input_element, onChange) {
+              return function() {
+                onChange(input_element, input_element.val());
+              };
+            }(input, current_options.onChange));
+          }
           break;
         case "boolean":
           input.prop("checked", current_options.value);
+          if (current_options.onChange) {
+            input.change(function(input_element, onChange) {
+              return function() {
+                onChange(input_element, input_element.val());
+              };
+            }(input, current_options.onChange));
+          }
           break;
 
         case "select":
@@ -559,14 +573,20 @@
             if (s.maxlength) {
               customInput.attr("maxlength", s.maxlength);
             }
-            select.change(function(sel, customValue, customInput) {
-              return function() {
-                if (sel.val() == customValue) {
-                  customInput.show();
-                } else {
-                  customInput.hide();
-                }
-              }}(select, s.value, customInput)
+            select.change(function(sel, onChange, customValue, customInput) {
+                return function() {
+                  var value = sel.val();
+                  if (value == customValue) {
+                    customInput.show();
+                    value = customInput.val();
+                  } else {
+                    customInput.hide();
+                  }
+                  if (onChange) {
+                    onChange(select, value);
+                  }
+                };
+              }(select, current_options.onChange, s.value, customInput)
             );
             if (current_options.value === s.value) {
               customInput.show();
@@ -611,7 +631,17 @@
             });
 
             input.append(checkbox);
+
+            if (current_options.onChange) {
+              checkbox.change(function(input_element, onChange) {
+                return function() {
+                  var value = input_element.prop("checked");
+                  onChange(input_element, value);
+                };
+              })(input, current_options.onChange);
+            }
           });
+
           break;
 
         case "radio":
@@ -652,6 +682,15 @@
 
             input.append(radio);
             radioInputs.push(radio.find("input"));
+
+            if (current_options.onChange) {
+              radio.change(function(input_element, onChange) {
+                return function() {
+                  var value = input_element.find("input:checked").val();
+                  onChange(input_element, value);
+                };
+              })(input, current_options.onChange);
+            }
           });
           if (current_options.useNumberShortcuts) {
             input.on('keypress', function(e) {
@@ -763,7 +802,8 @@
     var input = {};
     var inputFields = ['value', 'inputType', 'inputOptions', 
       'placeholder', 'pattern', 'maxlength', 'customInput',
-      'useNumberShortcuts', 'messageBefore', 'messageAfter'];
+      'useNumberShortcuts', 'messageBefore', 'messageAfter',
+      'onChange'];
     each(inputFields, function(_, x) {
       input[x] = options[x];
       delete options[x];
