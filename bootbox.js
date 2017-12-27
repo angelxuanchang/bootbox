@@ -485,6 +485,10 @@
 
       // create the input based on the supplied type
       input = $(templates.inputs[current_options.inputType]);
+      var input_validation_element = null;
+      if (current_options.hasValidation) {
+        input_validation_element = $('<div class="help-block with-errors"></div>');
+      }
 
       switch (current_options.inputType) {
         case "text":
@@ -495,22 +499,26 @@
         case "number":
         case "password":
           input.val(current_options.value);
-          if (current_options.onChange) {
-            input.change(function(input_element, onChange) {
-              return function() {
-                onChange(input_element, input_element.val());
-              };
-            }(input, current_options.onChange));
+          if (current_options.eventHandlers) {
+            each( current_options.eventHandlers, function( event_name, event_handler ) {
+              input.on(event_name, function(input_element, validation_element) {
+                return function(event) {
+                  event_handler(event, input_element, input_element.val(), validation_element);
+                };
+              }(input, input_validation_element));
+            });
           }
           break;
         case "boolean":
           input.prop("checked", current_options.value);
-          if (current_options.onChange) {
-            input.change(function(input_element, onChange) {
-              return function() {
-                onChange(input_element, input_element.val());
-              };
-            }(input, current_options.onChange));
+          if (current_options.eventHandlers) {
+            each( current_options.eventHandlers, function( event_name, event_handler ) {
+              input.on(event_name, function(input_element, validation_element) {
+                return function(event) {
+                  event_handler(event, input_element, input_element.val(), validation_element);
+                };
+              }(input, input_validation_element));
+            });
           }
           break;
 
@@ -573,21 +581,30 @@
             if (s.maxlength) {
               customInput.attr("maxlength", s.maxlength);
             }
-            select.change(function(sel, onChange, customValue, customInput) {
+            select.change(function(sel, customValue, customInput) {
                 return function() {
                   var value = sel.val();
                   if (value == customValue) {
                     customInput.show();
-                    value = customInput.val();
                   } else {
                     customInput.hide();
                   }
-                  if (onChange) {
-                    onChange(select, value);
-                  }
                 };
-              }(select, current_options.onChange, s.value, customInput)
+              }(select, s.value, customInput)
             );
+            if (current_options.eventHandlers) {
+              each( current_options.eventHandlers, function( event_name, event_handler ) {
+                select.on(event_name, function(input_element, validation_element) {
+                  return function(event) {
+                    var value = input_element.val();
+                    if (value == customValue) {
+                      value = customInput.val();
+                    }
+                    event_handler(event, input_element, value, validation_element);
+                  };
+                }(select, input_validation_element));
+              });
+            }
             if (current_options.value === s.value) {
               customInput.show();
             } else {
@@ -632,13 +649,15 @@
 
             input.append(checkbox);
 
-            if (current_options.onChange) {
-              checkbox.change(function(input_element, onChange) {
-                return function() {
-                  var value = input_element.prop("checked");
-                  onChange(input_element, value);
-                };
-              })(input, current_options.onChange);
+            if (current_options.eventHandlers) {
+              each( current_options.eventHandlers, function( event_name, event_handler ) {
+                checkbox.on(event_name, function(input_element, validation_element) {
+                  return function(event) {
+                    var value = input_element.prop("checked");
+                    event_handler(event, input_element, value, validation_element);
+                  };
+                }(input, input_validation_element));
+              });
             }
           });
 
@@ -683,13 +702,15 @@
             input.append(radio);
             radioInputs.push(radio.find("input"));
 
-            if (current_options.onChange) {
-              radio.change(function(input_element, onChange) {
-                return function() {
-                  var value = input_element.find("input:checked").val();
-                  onChange(input_element, value);
-                };
-              })(input, current_options.onChange);
+            if (current_options.eventHandlers) {
+              each( current_options.eventHandlers, function( event_name, event_handler ) {
+                radio.on(event_name, function(input_element, validation_element) {
+                  return function(event) {
+                    var value = input_element.find("input:checked").val();
+                    event_handler(event, input_element, value, validation_element);
+                  };
+                }(input, input_validation_element));
+              });
             }
           });
           if (current_options.useNumberShortcuts) {
@@ -735,6 +756,9 @@
         form.append(inputLabel);
       }
       form.append(input);
+      if (input_validation_element) {
+        form.append(input_validation_element);
+      }
       if (current_options.messageAfter) {
         form.append(current_options.messageAfter);
       }
@@ -803,7 +827,7 @@
     var inputFields = ['value', 'inputType', 'inputOptions', 
       'placeholder', 'pattern', 'maxlength', 'customInput',
       'useNumberShortcuts', 'messageBefore', 'messageAfter',
-      'onChange'];
+      'eventHandlers', 'hasValidation'];
     each(inputFields, function(_, x) {
       input[x] = options[x];
       delete options[x];

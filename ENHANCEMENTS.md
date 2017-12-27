@@ -34,6 +34,8 @@ The main enhancement is support for a form with multiple inputs.  This is a gene
 | `parse` | Custom object with `name` (`string`), `parse` (`function(string):T`), `toString` (`function(T):string`) that handles conversion between string and type `T` |
 | `messageBefore` | String with HTML to show before the input
 | `messageAfter` | String with HTML to show after the input
+| `hasValidation` | We perform custom validation, so add validation element |
+| `eventHandlers` | Object with event names to handlers `(function(event, element, value, validation_element))` |
 
 ### Additional options
 
