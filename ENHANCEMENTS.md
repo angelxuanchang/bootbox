@@ -42,3 +42,4 @@ The main enhancement is support for a form with multiple inputs.  This is a gene
 | Name      | Description |
 |-----------|-------------|
 | `propagateKeys=false` | By default, we now prevent key events (`keypress`, `keyup`, `keydown`) from propagating up.  Set this option to `true` to enable old behavior. |
+| `submitOnEnter=false` | Set true to have enter be a shortcut for submitting the form |
