@@ -490,6 +490,17 @@
         input_validation_element = $('<div class="help-block with-errors"></div>');
       }
 
+      if (current_options.inputOptions) {
+        // Make sure inputOptions have text and value
+        current_options.inputOptions = current_options.inputOptions.map(function(x) {
+          if (typeof(x) === 'string') {
+            return { text: x, value: x };
+          } else {
+            return x;
+          }
+        });
+      }
+
       switch (current_options.inputType) {
         case "text":
         case "textarea":
@@ -538,7 +549,6 @@
 
             // assume the element to attach to is the input...
             var elem = input;
-
             if (option.value === undefined || option.text === undefined) {
               throw new Error("each option needs a `value` and a `text` property");
             }
