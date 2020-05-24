@@ -28,14 +28,16 @@ The main enhancement is support for a form with multiple inputs.  This is a gene
 | Name      | Description |
 |-----------|-------------|
 | `inputType` | `text` (default), `textarea`, `email`, `select`, `checkbox`, <b>`boolean`</b>, <b>`radio`</b>, `date`, `time`, `number`, `password` |
-| `inputOptions`  | Array of valid values need to be specified for `select`, `checkbox`, or `radio`. |
+| `inputOptions`  | Array of valid values `[{ text: "abc", value: "xyz" }]` need to be specified for `select`, `checkbox`, or `radio`. |
 | `customInput` | Specifications for a custom input field (`Other`) for `select` |
 | `useNumberShortcuts` | Uses number as shortcuts for `radio` options (default=`false`) |
+| `autocomplete` | jquery autocomplete options (need to set `.ui-autocomplete` z-index to be high (say 99999) |
 | `parse` | Custom object with `name` (`string`), `parse` (`function(string):T`), `toString` (`function(T):string`) that handles conversion between string and type `T` |
 | `messageBefore` | String with HTML to show before the input
 | `messageAfter` | String with HTML to show after the input
 | `hasValidation` | We perform custom validation, so add validation element |
 | `eventHandlers` | Object with event names to handlers `(function(event, element, value, validation_element))` |
+
 
 ### Additional options
 
