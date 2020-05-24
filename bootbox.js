@@ -792,8 +792,18 @@
 
       // ...and replace it with one focusing our input, if possible
       dialog.on("shown.bs.modal", function() {
+        // Bind autocomplete if specified
+        for (var i = 0; i < options.inputs.length; i++) {
+          var current_options = options.inputs[i];
+          var input = inputs[i];
+          if (current_options.autocomplete) {
+            // console.log('activating autocomplete', current_options.autocomplete, i);
+            input.autocomplete(current_options.autocomplete);
+          }
+        }
+
         // need the closure here since input isn't
-        // an object otherwise
+        // an object otherwise (if input is nested)
         var elements = inputs[0].find('input');
         if (elements.length) {
           elements[0].focus();
