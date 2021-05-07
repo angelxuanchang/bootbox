@@ -1023,6 +1023,10 @@
     dialog.on("keyup", function(e) {
       if (e.which === 27) {
         dialog.trigger("escape.close.bb");
+      } else if (options.submitOnEnter && e.which === 13) {
+        // @TODO can we actually click *the* button object instead?
+        // e.g. buttons.confirm.click() or similar
+        dialog.find(".modal-footer button.btn-primary").click();
       }
     });
 
